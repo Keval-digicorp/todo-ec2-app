@@ -1,0 +1,14 @@
+{
+  "name": "todo-ec2-app",
+  "version": "1.0.0",
+  "description": "Todo app backend for EC2 deployment - Express + DynamoDB, serves frontend too",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0"
+  }
+}
