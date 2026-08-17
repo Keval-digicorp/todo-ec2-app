@@ -18,6 +18,10 @@ const {
   DeleteCommand,
 } = require("@aws-sdk/lib-dynamodb");
 const { randomUUID } = require("crypto");
+const {
+  SSMClient,
+  GetParameterCommand,
+} = require("@aws-sdk/client-ssm");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +32,14 @@ const REGION = process.env.AWS_REGION || "us-east-1";
 // — no access keys needed on the server itself.
 const client = new DynamoDBClient({ region: REGION });
 const ddb = DynamoDBDocumentClient.from(client);
+
+const ssmClient = new SSMClient({ region: REGION });
+
+async function getSecret(name) {
+  const command = new GetParameterCommand({ Name: name, WithDecryption: true });
+  const response = await ssmClient.send(command);
+  return response.Parameter.Value;
+}
 
 app.use(express.json());
 
@@ -113,6 +125,17 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`Todo server running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    const jwtSecret = await getSecret("/todo-app/JWT_SECRET");
+    console.log("✅ Successfully fetched secret from SSM. First 4 chars:", jwtSecret.substring(0, 4) + "****");
+  } catch (err) {
+    console.error("❌ Failed to fetch secret from SSM:", err.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Todo server running on port ${PORT}`);
+  });
+}
+
+startServer();
