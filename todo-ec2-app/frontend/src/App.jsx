@@ -46,7 +46,7 @@ export default function App() {
     <div style={styles.page}>
       <div style={styles.card}>
         <h1 style={styles.title}>Todo List</h1>
-        <p style={styles.subtitle}>React + Express (EC2) → DynamoDB</p>
+        <p style={styles.subtitle}>React (S3) + Express (EC2) → DynamoDB</p>
 
         <form onSubmit={addTodo} style={styles.form}>
           <input

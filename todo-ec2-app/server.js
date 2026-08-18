@@ -1,9 +1,9 @@
 // server.js
-// Express backend for the Todo app, designed to run on an EC2 instance.
-// Serves BOTH the REST API (/api/todos) AND the built frontend (public/) from one server.
+// Express API for the Todo app, running on EC2.
+// The React frontend is hosted separately on S3; this server handles /api/todos only
+// (still serves public/ as a fallback if you visit EC2:3000 directly).
 //
-// Requires: an IAM role attached to this EC2 instance with DynamoDB access
-// on the "todos" table (see README.md, Part 3).
+// Requires: IAM role on this EC2 instance with DynamoDB access on the "todos" table.
 
 const express = require("express");
 const path = require("path");
@@ -27,6 +27,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const TABLE_NAME = process.env.TABLE_NAME || "todos";
 const REGION = process.env.AWS_REGION || "us-east-1";
+// S3 website origin allowed to call this API (browser CORS check).
+const CORS_ORIGIN =
+  process.env.CORS_ORIGIN ||
+  "http://keval-todo-app-files-2026.s3-website-us-east-1.amazonaws.com";
 
 // The SDK automatically picks up credentials from the EC2 instance's IAM role
 // — no access keys needed on the server itself.
@@ -42,6 +46,15 @@ async function getSecret(name) {
 }
 
 app.use(express.json());
+
+// CORS: browser blocks cross-origin requests unless the API explicitly allows the S3 URL.
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", CORS_ORIGIN);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 // ---- API routes ----
 
