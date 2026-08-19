@@ -1,0 +1,36 @@
+# AWS CodeBuild buildspec — used by CodePipeline to deploy the todo app.
+# Builds React → uploads to S3 → updates EC2 via SSM Run Command.
+
+version: 0.2
+
+env:
+  variables:
+    S3_BUCKET: keval-todo-app-files-2026
+    EC2_INSTANCE_ID: i-032bfcde400515d51
+    AWS_REGION: us-east-1
+    # Set VITE_API_URL in the CodeBuild project environment variables (Console).
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+
+  build:
+    commands:
+      - echo "Building React frontend..."
+      - cd todo-ec2-app/frontend
+      - npm ci
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "Uploading frontend to S3..."
+      - aws s3 sync todo-ec2-app/frontend/dist/ s3://$S3_BUCKET/ --delete
+      - echo "Updating API on EC2 via SSM..."
+      - |
+        aws ssm send-command \
+          --instance-ids "$EC2_INSTANCE_ID" \
+          --document-name "AWS-RunShellScript" \
+          --comment "CodePipeline deploy todo-app" \
+          --parameters '{"commands":["sudo -u ubuntu bash -lc \"cd ~/todo-ec2-app && git pull && cd todo-ec2-app && npm install && pm2 restart todo-app\""]}' \
+          --region "$AWS_REGION"
