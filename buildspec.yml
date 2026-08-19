@@ -8,7 +8,7 @@ env:
     S3_BUCKET: keval-todo-app-files-2026
     EC2_INSTANCE_ID: i-032bfcde400515d51
     AWS_REGION: us-east-1
-    # Set VITE_API_URL in the CodeBuild project environment variables (Console).
+    VITE_API_URL: http://100.49.220.82:3000
 
 phases:
   install:
