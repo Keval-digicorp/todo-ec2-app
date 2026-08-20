@@ -53,7 +53,7 @@ export default function App() {
             style={styles.input}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="What needswrw to doing?"
+            placeholder="What needs to doing?"
           />
           <button style={styles.addBtn} type="submit">Add</button>
         </form>
