@@ -25,7 +25,8 @@ phases:
   post_build:
     commands:
       - echo "Uploading frontend to S3..."
-      - aws s3 sync todo-ec2-app/frontend/dist/ s3://$S3_BUCKET/ --delete
+      # Use CODEBUILD_SRC_DIR — POST_BUILD cwd may still be inside frontend/ after BUILD cd
+      - aws s3 sync $CODEBUILD_SRC_DIR/todo-ec2-app/frontend/dist/ s3://$S3_BUCKET/ --delete
       - echo "Updating API on EC2 via SSM..."
       - |
         aws ssm send-command \
