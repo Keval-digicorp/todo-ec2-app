@@ -14,6 +14,7 @@ async function request(path, options = {}) {
 
 export const api = {
   list: () => request("/api/todos"),
+  health: () => request("/api/health"),
   create: (text) => request("/api/todos", { method: "POST", body: JSON.stringify({ text }) }),
   update: (id, patch) => request(`/api/todos/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
   remove: (id) => request(`/api/todos/${id}`, { method: "DELETE" }),

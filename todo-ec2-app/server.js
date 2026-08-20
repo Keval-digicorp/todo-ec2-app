@@ -58,11 +58,15 @@ app.use((req, res, next) => {
 
 // ---- API routes ----
 
+// Deploy marker — change this string and push to verify CodePipeline backend deploy.
+const DEPLOY_VERSION = "backend-v2-full-stack-test";
+
 // Deploy test: open http://100.49.220.82:3000/api/health after push — message should update.
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
-    message: "Backend deployed via CodePipeline — test v1",
+    deployVersion: DEPLOY_VERSION,
+    message: "Backend live on EC2 — CodePipeline auto-deploy v2",
     timestamp: new Date().toISOString(),
   });
 });

@@ -1,14 +1,21 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 
+// Change this when testing frontend deploy — should appear on S3 after CodePipeline runs.
+const FRONTEND_DEPLOY_VERSION = "frontend-v2-full-stack-test";
+
 export default function App() {
   const [todos, setTodos] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [backendVersion, setBackendVersion] = useState("");
 
   useEffect(() => {
     load();
+    api.health()
+      .then((data) => setBackendVersion(data.deployVersion || data.message || "unknown"))
+      .catch(() => setBackendVersion("unreachable"));
   }, []);
 
   async function load() {
@@ -45,8 +52,23 @@ export default function App() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Todo List</h1>
+        <div style={styles.deployBanner}>
+          <strong>Deploy test v2</strong> — push to GitHub → CodePipeline updates both
+        </div>
+
+        <h1 style={styles.title}>Todo App — Full Stack Test</h1>
         <p style={styles.subtitle}>React (S3) + Express (EC2) → DynamoDB</p>
+
+        <div style={styles.versionBox}>
+          <p style={styles.versionLine}>
+            <span style={styles.badgeFrontend}>FRONTEND</span>
+            {FRONTEND_DEPLOY_VERSION} (S3)
+          </p>
+          <p style={styles.versionLine}>
+            <span style={styles.badgeBackend}>BACKEND</span>
+            {backendVersion || "loading…"} (EC2)
+          </p>
+        </div>
 
         <form onSubmit={addTodo} style={styles.form}>
           <input
@@ -84,8 +106,13 @@ export default function App() {
 }
 
 const styles = {
-  page: { minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: "60px", background: "#0f172a", fontFamily: "system-ui, sans-serif" },
-  card: { background: "#1e293b", padding: "32px", borderRadius: "12px", width: "420px", boxShadow: "0 10px 30px rgba(0,0,0,0.4)" },
+  page: { minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: "60px", background: "#0c4a6e", fontFamily: "system-ui, sans-serif" },
+  card: { background: "#1e293b", padding: "32px", borderRadius: "12px", width: "460px", boxShadow: "0 10px 30px rgba(0,0,0,0.4)", border: "2px solid #10b981" },
+  deployBanner: { background: "#065f46", color: "#6ee7b7", padding: "10px 12px", borderRadius: "8px", fontSize: "13px", marginBottom: "16px", textAlign: "center" },
+  versionBox: { background: "#0f172a", padding: "12px", borderRadius: "8px", marginBottom: "16px" },
+  versionLine: { color: "#e2e8f0", fontSize: "13px", margin: "6px 0", display: "flex", alignItems: "center", gap: "8px" },
+  badgeFrontend: { background: "#6366f1", color: "white", fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px" },
+  badgeBackend: { background: "#f59e0b", color: "#1e293b", fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px" },
   title: { color: "#f8fafc", margin: 0, fontSize: "24px" },
   subtitle: { color: "#94a3b8", fontSize: "13px", marginTop: "4px", marginBottom: "20px" },
   form: { display: "flex", gap: "8px", marginBottom: "16px" },
