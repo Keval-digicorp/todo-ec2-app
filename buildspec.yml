@@ -28,10 +28,7 @@ phases:
       # Use CODEBUILD_SRC_DIR — POST_BUILD cwd may still be inside frontend/ after BUILD cd
       - aws s3 sync $CODEBUILD_SRC_DIR/todo-ec2-app/frontend/dist/ s3://$S3_BUCKET/ --delete
       - echo "Updating API on EC2 via SSM..."
+      # Write params to a file — avoids shell/JSON quote escaping (common cause of exit 254)
       - |
-        aws ssm send-command \
-          --instance-ids "$EC2_INSTANCE_ID" \
-          --document-name "AWS-RunShellScript" \
-          --comment "CodePipeline deploy todo-app" \
-          --parameters '{"commands":["sudo -u ubuntu bash -lc \"cd ~/todo-ec2-app && git pull && cd todo-ec2-app && npm install && pm2 restart todo-app\""]}' \
-          --region "$AWS_REGION"
+        printf '%s\n' '{"commands":["sudo -u ubuntu bash -c \"cd /home/ubuntu/todo-ec2-app && git pull && cd todo-ec2-app && npm install && pm2 restart todo-app\""]}' > /tmp/ssm-params.json
+      - aws ssm send-command --instance-ids "$EC2_INSTANCE_ID" --document-name "AWS-RunShellScript" --comment "CodePipeline deploy todo-app" --parameters file:///tmp/ssm-params.json --region "$AWS_REGION"
