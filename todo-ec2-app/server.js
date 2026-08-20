@@ -58,6 +58,15 @@ app.use((req, res, next) => {
 
 // ---- API routes ----
 
+// Deploy test: open http://100.49.220.82:3000/api/health after push — message should update.
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Backend deployed via CodePipeline — test v1",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/api/todos", async (req, res) => {
   try {
     const result = await ddb.send(new ScanCommand({ TableName: TABLE_NAME }));
