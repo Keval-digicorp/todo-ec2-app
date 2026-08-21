@@ -1,8 +1,9 @@
-// Frontend lives on S3; API lives on EC2 — different origins, so we need the full EC2 URL.
-const API_BASE = import.meta.env.VITE_API_URL || "";
+// Frontend calls TWO microservices on EC2 (different ports).
+const TODOS_API = import.meta.env.VITE_TODOS_API_URL || import.meta.env.VITE_API_URL || "";
+const ANALYTICS_API = import.meta.env.VITE_ANALYTICS_API_URL || "";
 
-async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+async function request(base, path, options = {}) {
+  const res = await fetch(`${base}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
@@ -21,16 +22,22 @@ function toQuery(params = {}) {
 }
 
 export const api = {
-  health: () => request("/api/health"),
-  stats: () => request("/api/todos/stats"),
-  search: (q) => request(`/api/todos/search?q=${encodeURIComponent(q)}`),
-  list: (filters = {}) => request(`/api/todos${toQuery(filters)}`),
-  get: (id) => request(`/api/todos/${id}`),
+  health: async () => {
+    const [todos, analytics] = await Promise.all([
+      request(TODOS_API, "/api/health").catch(() => ({ status: "down", service: "todos-api" })),
+      request(ANALYTICS_API, "/api/health").catch(() => ({ status: "down", service: "analytics-api" })),
+    ]);
+    return { todos, analytics };
+  },
+  stats: () => request(ANALYTICS_API, "/api/todos/stats"),
+  search: (q) => request(ANALYTICS_API, `/api/todos/search?q=${encodeURIComponent(q)}`),
+  list: (filters = {}) => request(TODOS_API, `/api/todos${toQuery(filters)}`),
+  get: (id) => request(TODOS_API, `/api/todos/${id}`),
   create: (payload) =>
-    request("/api/todos", { method: "POST", body: JSON.stringify(payload) }),
+    request(TODOS_API, "/api/todos", { method: "POST", body: JSON.stringify(payload) }),
   update: (id, patch) =>
-    request(`/api/todos/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
-  remove: (id) => request(`/api/todos/${id}`, { method: "DELETE" }),
-  completeAll: () => request("/api/todos/bulk/complete-all", { method: "POST" }),
-  clearCompleted: () => request("/api/todos/completed", { method: "DELETE" }),
+    request(TODOS_API, `/api/todos/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  remove: (id) => request(TODOS_API, `/api/todos/${id}`, { method: "DELETE" }),
+  completeAll: () => request(ANALYTICS_API, "/api/todos/bulk/complete-all", { method: "POST" }),
+  clearCompleted: () => request(ANALYTICS_API, "/api/todos/completed", { method: "DELETE" }),
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 
-const FRONTEND_DEPLOY_VERSION = "frontend-v3-features";
+const FRONTEND_DEPLOY_VERSION = "frontend-v4-microservices";
 const PRIORITIES = ["low", "medium", "high"];
 const CATEGORIES = ["general", "work", "personal", "shopping"];
 const FILTERS = [
@@ -24,7 +24,7 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [backendVersion, setBackendVersion] = useState("");
+  const [services, setServices] = useState({ todos: null, analytics: null });
 
   useEffect(() => {
     refresh();
@@ -42,7 +42,7 @@ export default function App() {
       ]);
       setTodos(todoData);
       setStats(statsData);
-      setBackendVersion(health.deployVersion || "unknown");
+      setServices(health);
     } catch {
       setError("Could not reach the API.");
     } finally {
@@ -119,13 +119,21 @@ export default function App() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Todo App — v3 Features</h1>
-        <p style={styles.subtitle}>Stats · Search · Priority · Category · Due dates · Bulk actions</p>
+        <h1 style={styles.title}>Todo App — Microservices</h1>
+        <p style={styles.subtitle}>2 backend services on EC2 · 1 frontend on S3</p>
 
         <div style={styles.versionBox}>
-          <span style={styles.badgeFrontend}>FE</span> {FRONTEND_DEPLOY_VERSION}
-          <span style={styles.dot}>·</span>
-          <span style={styles.badgeBackend}>BE</span> {backendVersion || "…"}
+          <p style={styles.versionLine}>
+            <span style={styles.badgeFrontend}>FRONTEND</span> {FRONTEND_DEPLOY_VERSION} (S3)
+          </p>
+          <p style={styles.versionLine}>
+            <span style={styles.badgeBackend}>TODOS API</span>
+            :3000 — {services.todos?.deployVersion || services.todos?.status || "…"}
+          </p>
+          <p style={styles.versionLine}>
+            <span style={styles.badgeAnalytics}>ANALYTICS API</span>
+            :3001 — {services.analytics?.deployVersion || services.analytics?.status || "…"}
+          </p>
         </div>
 
         {stats && (
@@ -289,7 +297,11 @@ const styles = {
     background: "#f59e0b", color: "#1e293b", fontSize: "10px", fontWeight: 700,
     padding: "2px 5px", borderRadius: "4px", marginRight: "4px",
   },
-  dot: { margin: "0 6px" },
+  badgeAnalytics: {
+    background: "#ec4899", color: "white", fontSize: "10px", fontWeight: 700,
+    padding: "2px 5px", borderRadius: "4px", marginRight: "4px",
+  },
+  versionLine: { color: "#e2e8f0", fontSize: "12px", margin: "4px 0" },
   statsGrid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginBottom: "16px" },
   statBox: { background: "#0f172a", borderRadius: "8px", padding: "10px", textAlign: "center" },
   statValue: { fontSize: "20px", fontWeight: 700 },

@@ -1,5 +1,4 @@
-# AWS CodeBuild buildspec — used by CodePipeline to deploy the todo app.
-# Builds React → uploads to S3 → updates EC2 via SSM Run Command.
+# AWS CodeBuild buildspec — CodePipeline deploys frontend (S3) + 2 microservices (EC2).
 
 version: 0.2
 
@@ -8,7 +7,8 @@ env:
     S3_BUCKET: keval-todo-app-files-2026
     EC2_INSTANCE_ID: i-032bfcde400515d51
     AWS_REGION: us-east-1
-    VITE_API_URL: http://100.49.220.82:3000
+    VITE_TODOS_API_URL: http://100.49.220.82:3000
+    VITE_ANALYTICS_API_URL: http://100.49.220.82:3001
 
 phases:
   install:
@@ -25,10 +25,8 @@ phases:
   post_build:
     commands:
       - echo "Uploading frontend to S3..."
-      # Use CODEBUILD_SRC_DIR — POST_BUILD cwd may still be inside frontend/ after BUILD cd
       - aws s3 sync $CODEBUILD_SRC_DIR/todo-ec2-app/frontend/dist/ s3://$S3_BUCKET/ --delete
-      - echo "Updating API on EC2 via SSM..."
-      # Write params to a file — avoids shell/JSON quote escaping (common cause of exit 254)
+      - echo "Deploying microservices on EC2 via SSM..."
       - |
-        printf '%s\n' '{"commands":["sudo -u ubuntu bash -c \"cd /home/ubuntu/todo-ec2-app && git pull && cd todo-ec2-app && npm install && pm2 restart todo-app\""]}' > /tmp/ssm-params.json
-      - aws ssm send-command --instance-ids "$EC2_INSTANCE_ID" --document-name "AWS-RunShellScript" --comment "CodePipeline deploy todo-app" --parameters file:///tmp/ssm-params.json --region "$AWS_REGION"
+        printf '%s\n' '{"commands":["sudo -u ubuntu bash -c \"cd /home/ubuntu/todo-ec2-app && git pull && cd todo-ec2-app && npm install --prefix services/todos-api && npm install --prefix services/analytics-api && pm2 delete todo-app 2>/dev/null || true && pm2 start ecosystem.config.js --update-env || pm2 reload ecosystem.config.js\""]}' > /tmp/ssm-params.json
+      - aws ssm send-command --instance-ids "$EC2_INSTANCE_ID" --document-name "AWS-RunShellScript" --comment "CodePipeline deploy microservices" --parameters file:///tmp/ssm-params.json --region "$AWS_REGION"

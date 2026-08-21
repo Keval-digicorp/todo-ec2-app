@@ -1,0 +1,14 @@
+{
+  "name": "todos-api",
+  "version": "1.0.0",
+  "description": "Microservice — todo CRUD (port 3000)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0"
+  }
+}

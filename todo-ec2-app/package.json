@@ -1,15 +1,11 @@
 {
   "name": "todo-ec2-app",
-  "version": "1.0.0",
-  "description": "Todo app API for EC2 deployment - Express + DynamoDB (frontend on S3)",
-  "main": "server.js",
+  "version": "2.0.0",
+  "description": "Todo app — microservices on EC2 + React on S3",
   "scripts": {
-    "start": "node server.js"
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop ecosystem.config.js",
+    "restart": "pm2 reload ecosystem.config.js"
   },
-  "dependencies": {
-    "express": "^4.19.2",
-    "@aws-sdk/client-dynamodb": "^3.600.0",
-    "@aws-sdk/lib-dynamodb": "^3.600.0",
-    "@aws-sdk/client-ssm": "^3.600.0"
-  }
+  "dependencies": {}
 }
