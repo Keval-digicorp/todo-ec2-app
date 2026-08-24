@@ -7,8 +7,9 @@ env:
     S3_BUCKET: keval-todo-app-files-2026
     EC2_INSTANCE_ID: i-032bfcde400515d51
     AWS_REGION: us-east-1
-    VITE_TODOS_API_URL: http://100.49.220.82:3000
-    VITE_ANALYTICS_API_URL: http://100.49.220.82:3001
+    CLOUDFRONT_URL: https://dgubys71735h4.cloudfront.net
+    VITE_TODOS_API_URL: https://dgubys71735h4.cloudfront.net
+    VITE_ANALYTICS_API_URL: https://dgubys71735h4.cloudfront.net
 
 phases:
   install:
